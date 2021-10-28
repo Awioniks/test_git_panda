@@ -1,4 +1,4 @@
 FROM	openjdk:11.0
-ARG	JAR_FILE=target/*.jar
+ARG	    JAR_FILE=target/*.jar
 COPY	${JAR_FILE} app.jar
-CMD	["java", "-jar", "/app.jar"]
+CMD	    ["java", "-jar", "/app.jar"]
