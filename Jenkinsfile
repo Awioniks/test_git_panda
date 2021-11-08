@@ -26,7 +26,7 @@ pipeline{
          stage("Get code"){
             steps {
                 echo "CODE"
-                git branch: 'selenium_grid', url: 'https://github.com/mwock/panda_application.git'
+                git branch: 'master', url: 'https://github.com/Awioniks/test_git_panda.git'
             }
         }
          stage("Build and Junit"){
