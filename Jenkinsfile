@@ -7,11 +7,13 @@ pipeline{
     tools {
         // Install the Maven version configured as "M3" and add it to the path.
         maven "M3"
+        terraform 'Terraform'
     }
-    
+
     environment {
         // IMAGE = "panda"
         // VERSION = "0.0.1"
+        ANSIBLE = tool name: 'Ansible', type: 'com.cloudbees.jenkins.plugins.customtools.CustomTool'
         IMAGE = readMavenPom().getArtifactId()
         VERSION = readMavenPom().getVersion()
     }
@@ -68,6 +70,36 @@ pipeline{
                     sh 'docker stop pandaapp'
                     deleteDir()
                 }
+            }
+        }
+        stage('Test installation') {
+            steps {
+                sh 'terraform --version'
+                sh 'ansible --version'
+            }
+        }
+        stage('Check AWS Env') {
+            steps {
+                    dir('infrastucture/terraform'){
+                    withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-id']]) {
+                        sh "infrastructure init && terraform apply -auto-approve -var-file panda.tfvars"
+                    }
+                    withCredentials([file(credentialsId: 'aws_keys', variable: 'pandafile')]) {
+                        sh "cp \$pandafile ../panda.pem"
+                    }   
+                }
+            }
+        }
+        stage('Copy Ansible role') {
+            steps {
+                sh 'cp infrastructure/ansible/panda /etc/ansible/roles'
+            }
+        }
+        stage('Run Ansible') {
+            steps {
+                dir('infrastructure/ansible')
+                sh 'chmod 600 ../panda.pem'
+                sh 'ansible-playbook -i ./inventory playbook.yml'
             }
         }
     }
